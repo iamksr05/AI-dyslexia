@@ -1,0 +1,376 @@
+/* Dyslexia-friendly font stack: Arial, Verdana, and other sans-serif fonts */
+/* Note: Arial and Verdana are excellent for dyslexia. OpenDyslexic can be added if available. */
+@font-face {
+    font-family: 'OpenDyslexic';
+    src: url('https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@master/compiled/otf/OpenDyslexic-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'OpenDyslexic';
+    src: url('https://cdn.jsdelivr.net/gh/antijingoist/opendyslexic@master/compiled/otf/OpenDyslexic-Bold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "OpenDyslexic", Arial, Verdana, "Helvetica Neue", Helvetica, sans-serif;
+}
+
+body {
+    background: #fffff0; /* Light cream/yellow background */
+}
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    background: #fffff0; /* Light cream/yellow background */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#header {
+    width: 100%;
+    max-width: 1280px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: #fffff0; /* Light cream/yellow background */
+}
+
+.header-left {
+    flex: 1;
+}
+
+.app-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #000000; /* Dark black text */
+    margin-bottom: 8px;
+    font-family: "OpenDyslexic", Arial, Verdana, sans-serif;
+}
+
+.taglines {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tagline {
+    font-size: 14px;
+    color: #000000; /* Dark black text */
+    font-weight: 400;
+    font-family: "OpenDyslexic", Arial, Verdana, sans-serif;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+    display: inline-block;
+}
+
+.status-text {
+    font-size: 14px;
+    color: #4CAF50;
+    font-weight: 500;
+    font-family: "OpenDyslexic", Arial, Verdana, sans-serif;
+}
+
+#chat_container {
+    flex: 1;
+    width: 100%;
+    max-width: 1280px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* Increased gap for extra spacing between messages */
+
+    padding: 20px;
+    padding-bottom: 20px;
+    scroll-behavior: smooth;
+    background: #fffff0; /* Light cream/yellow background */
+}
+
+/* Custom scrollbar styling */
+#chat_container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat_container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#chat_container::-webkit-scrollbar-thumb {
+    background: #87CEEB;
+    border-radius: 4px;
+}
+
+#chat_container::-webkit-scrollbar-thumb:hover {
+    background: #6BB6E0;
+}
+
+.wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    padding: 0;
+}
+
+.wrapper.user {
+    justify-content: flex-end;
+}
+
+.ai {
+    justify-content: flex-start;
+}
+
+.chat {
+    max-width: 70%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.wrapper.user .chat {
+    flex-direction: row-reverse;
+}
+
+.profile {
+    width: 36px;
+    height: 36px;
+    border-radius: 100px;
+    background: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.ai .profile {
+    background: #90EE90;
+}
+
+.profile img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+.ai .message {
+    background: #fffacd; /* Light yellow background for messages */
+    color: #000000; /* Dark black text */
+    font-size: 16px;
+    font-family: "OpenDyslexic", Arial, Verdana, sans-serif;
+    padding: 14px 18px; /* Slightly more padding */
+    border-radius: 18px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.8; /* Increased line spacing (1.8 instead of 1.6) */
+    letter-spacing: 0.5px; /* Slight letter spacing for better readability */
+}
+
+/* Enhanced formatting for dyslexia-friendly communication */
+.ai .message ul,
+.ai .message ol {
+    margin: 12px 0; /* Increased margin for extra spacing */
+    padding-left: 24px;
+    line-height: 1.8; /* Increased line spacing */
+}
+
+.ai .message li {
+    margin: 8px 0; /* Increased margin between list items */
+    line-height: 1.8; /* Increased line spacing */
+}
+
+.ai .message strong {
+    font-weight: 700; /* Bold for emphasis */
+    color: #000000; /* Dark black for bold text */
+    /* Never use italics - only bold */
+}
+
+.ai .message em,
+.ai .message i {
+    font-style: normal; /* Disable italics - convert to normal */
+    font-weight: 700; /* Make it bold instead */
+}
+
+.ai .message u {
+    text-decoration: none; /* Remove underlines */
+    font-weight: 700; /* Make it bold instead */
+}
+
+.ai .message p {
+    margin: 12px 0; /* Increased spacing between paragraphs */
+    line-height: 1.8; /* Increased line spacing */
+}
+
+.ai .message p:first-child {
+    margin-top: 0;
+}
+
+.ai .message p:last-child {
+    margin-bottom: 0;
+}
+
+/* Extra spacing for better readability */
+.ai .message br {
+    line-height: 1.8;
+}
+
+/* Visual separators for better chunking */
+.ai .message hr {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    margin: 16px 0; /* Increased margin for extra spacing */
+}
+
+.wrapper:not(.ai) .message {
+    background: #e8e8e8; /* Slightly lighter gray for user messages */
+    color: #000000; /* Dark black text */
+    font-size: 16px;
+    font-family: "OpenDyslexic", Arial, Verdana, sans-serif;
+    padding: 12px 16px;
+    border-radius: 18px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.8; /* Increased line spacing */
+    letter-spacing: 0.5px; /* Slight letter spacing */
+}
+
+/* Style hyperlinks within the chat messages - use bold instead of underline */
+.ai .message a {
+    color: #0066cc;
+    text-decoration: none; /* No underline */
+    font-weight: 700; /* Bold instead */
+}
+
+.wrapper:not(.ai) .message a {
+    color: #0066cc;
+    text-decoration: none; /* No underline */
+    font-weight: 700; /* Bold instead */
+}
+
+.ai .message a:hover {
+    text-decoration: none;
+    opacity: 0.8;
+}
+
+form {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 12px;
+    background: #ffffff; /* White form background */
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+textarea {
+    width: 100%;
+    color: #000000; /* Dark black text */
+    font-size: 16px;
+    padding: 10px;
+    background: transparent;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: "OpenDyslexic", Arial, Verdana, sans-serif;
+    line-height: 1.8; /* Increased line spacing */
+    letter-spacing: 0.5px; /* Slight letter spacing */
+}
+
+textarea::placeholder {
+    color: #999999;
+}
+
+button {
+    outline: 0;
+    border: 0;
+    cursor: pointer;
+    background: #87CEEB;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #6BB6E0;
+}
+
+form img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
+@keyframes sendAnimation {
+    0% {
+      transform: scale(1) rotate(0deg);
+    }
+    50% {
+      transform: scale(1.2) rotate(20deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+  }
+  
+  .animate-send {
+    animation: sendAnimation 0.4s ease;
+  }
+  
+
+  @keyframes coolSend {
+    0% {
+      transform: scale(1) rotate(0deg) translateY(0);
+      opacity: 1;
+    }
+    30% {
+      transform: scale(1.2) rotate(15deg) translateY(-6px);
+    }
+    60% {
+      transform: scale(0.9) rotate(-10deg) translateY(2px);
+    }
+    100% {
+      transform: scale(1) rotate(0deg) translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-cool-send {
+    animation: coolSend 0.5s ease;
+  }

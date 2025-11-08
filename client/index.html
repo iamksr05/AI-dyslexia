@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Learning Companion</title>
+
+    <!-- Meta -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- Favicon & Manifest -->
+    <link rel="manifest" href="/client/manifest.json" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- OpenDyslexic Font loaded via @font-face in CSS, with Arial and Verdana as fallbacks -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="header">
+        <div class="header-left">
+          <h1 class="app-title">AI Learning Companion</h1>
+          <div class="taglines">
+            <p class="tagline">📖 Easy-to-read responses for everyone</p>
+            <p class="tagline">✨ Optimized for dyslexia-friendly reading</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">AI Connected</span>
+          </div>
+        </div>
+      </header>
+
+      <div id="chat_container"></div>
+
+      <form>
+        <textarea
+          id="prompt"
+          name="prompt"
+          rows="1"
+          cols="1"
+          placeholder="Ask me anything...🎯"
+        ></textarea>
+        <button type="submit" id="sendButton">
+          <!-- STATIC IMAGE, does NOT change -->
+          <img id="sendIcon" src="./assets/send.svg" alt="send" />
+        </button>
+      </form>
+    </div>
+
+    <!-- Optional: Service Worker -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker
+            .register("/service-worker.js")
+            .then(function (registration) {
+              console.log(
+                "Service Worker registered with scope:",
+                registration.scope
+              );
+            })
+            .catch(function (error) {
+              console.log("Service Worker registration failed:", error);
+            });
+        });
+      }
+    </script>
+
+    <!-- JavaScript file (no changes needed) -->
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
