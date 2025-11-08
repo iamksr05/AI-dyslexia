@@ -39,6 +39,36 @@ function formatUrls(text) {
   return text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
 }
 
+// Function to ensure proper bold formatting (convert markdown to HTML if needed)
+function ensureBoldFormatting(text) {
+  if (!text) return text;
+  
+  let formatted = text;
+  
+  // Convert markdown bold (**text** or __text__) to HTML <strong> tags
+  // This handles cases where AI uses markdown instead of HTML
+  
+  // Convert **text** to <strong>text</strong> (non-greedy match)
+  formatted = formatted.replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>');
+  
+  // Convert __text__ to <strong>text</strong> (non-greedy match)
+  formatted = formatted.replace(/__([^_]+?)__/g, '<strong>$1</strong>');
+  
+  // Count and fix any unclosed <strong> tags
+  const openMatches = formatted.match(/<strong>/g) || [];
+  const closeMatches = formatted.match(/<\/strong>/g) || [];
+  
+  const openCount = openMatches.length;
+  const closeCount = closeMatches.length;
+  
+  // Add missing closing tags at the end if needed
+  if (openCount > closeCount) {
+    formatted += '</strong>'.repeat(openCount - closeCount);
+  }
+  
+  return formatted;
+}
+
 // Main POST endpoint
 app.post('/', async (req, res) => {
   try {
@@ -54,11 +84,21 @@ CORE COMMUNICATION PRINCIPLES FOR DYSLEXIA-FRIENDLY WRITING:
 2. Keep ONE IDEA per line or sentence. Do not combine multiple ideas in one sentence.
 3. Use PLAIN, COMMON words. Avoid complicated vocabulary, jargon, or technical terms when possible. If you must use a technical term, explain it simply first.
 4. Keep paragraphs SHORT. Maximum 3-4 lines per paragraph. One sentence per paragraph is even better.
-5. Use BOLD text (<strong>) for key words. NEVER use italics or underlines for emphasis - only use bold.
+5. ALWAYS use <strong> tags for key words and important concepts. This is MANDATORY. Bold at least 2-3 important terms per response. NEVER use italics, underlines, or markdown formatting - ONLY use HTML <strong> tags.
 6. Break complex information into small, digestible chunks with clear visual separation.
 7. Use simple sentence structures. Avoid complex clauses and long sentences.
 8. Use bullet points or numbered lists when presenting multiple ideas.
 9. Write in a clear, direct way. Be concise but complete.
+
+EXAMPLE OF PROPER FORMATTING WITH BOLD:
+Here is an example response:
+<p>The <strong>sun</strong> gives us light.</p>
+<p>It helps plants grow.</p>
+<p>Plants need <strong>sunlight</strong> to make food.</p>
+<p>This process is called <strong>photosynthesis</strong>.</p>
+<p><strong>Photosynthesis</strong> is how plants make energy.</p>
+
+Notice how key terms like "sun", "sunlight", and "photosynthesis" are wrapped in <strong> tags.
 
 RESPONSE FORMATTING RULES:
 - Keep sentences SHORT: 10-15 words maximum per sentence
@@ -74,6 +114,21 @@ RESPONSE FORMATTING RULES:
 - Write in small chunks - 2-3 sentences per paragraph maximum
 - Your responses will be rendered as HTML, so use proper HTML tags for formatting
 - Remember: SHORT sentences. ONE idea per sentence. PLAIN words.
+
+BOLD TEXT FORMATTING - CRITICAL RULES:
+- ALWAYS use <strong> tags (NOT markdown **) for emphasis
+- Bold key terms, important concepts, main ideas, and key points
+- Bold important words that users need to remember
+- Bold technical terms when first introduced (then explain them)
+- Bold action items, steps, or important instructions
+- Examples of what to bold:
+  * Main topics: <strong>dyslexia</strong> is a learning difference
+  * Key concepts: The <strong>main idea</strong> is to keep it simple
+  * Important steps: First, <strong>read the question</strong> carefully
+  * Key terms: This uses <strong>machine learning</strong> technology
+- Format: <strong>word or phrase</strong> - always use proper HTML tags
+- NEVER use markdown **bold** or __bold__ - only use <strong> tags
+- Make sure to close tags: <strong>word</strong> not <strong>word
 
 GENERAL CAPABILITIES:
 You can handle all types of questions, from general knowledge to calculus and complex commands. 
@@ -96,9 +151,22 @@ Bot:`;
     // });
 
 
+    const systemMessage = `You are InfoGenius AI, designed for dyslexia-friendly communication. 
+
+CRITICAL FORMATTING REQUIREMENT:
+- You MUST use <strong> tags for important words and key concepts
+- Bold at least 2-3 important terms in every response
+- Use <strong>word</strong> format - NEVER use markdown **bold**
+- Always close your tags properly: <strong>text</strong>
+- Examples: <strong>dyslexia</strong>, <strong>main idea</strong>, <strong>key point</strong>
+- Your responses are rendered as HTML, so use proper HTML tags only`;
+
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: prompt }
+      ],
       temperature: 0.2,
       max_tokens: 3000,
       top_p: 1,
@@ -108,8 +176,11 @@ Bot:`;
 
     const botResponse = response?.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
 
-    // Optionally format URLs in the bot's response
-    const formattedResponse = formatUrls(botResponse);
+    // Ensure proper bold formatting (convert markdown to HTML if needed)
+    const withBoldFormatting = ensureBoldFormatting(botResponse);
+    
+    // Format URLs in the bot's response
+    const formattedResponse = formatUrls(withBoldFormatting);
 
     // Prepare chat entry for MongoDB.
     const chatData = {

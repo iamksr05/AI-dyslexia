@@ -104,7 +104,58 @@ function toggleVoiceInput() {
   }
 }
 
-// Text-to-Speech
+// Get a soothing voice from available voices
+function getSoothingVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) {
+    return null;
+  }
+
+  // Priority list for soothing voices (common across platforms)
+  const soothingVoiceNames = [
+    'zira',           // Windows - Microsoft Zira (Female, English US)
+    'hazel',          // Windows - Microsoft Hazel (Female, English UK)
+    'susan',          // Some systems
+    'karen',          // macOS
+    'samantha',       // macOS
+    'victoria',       // Some systems
+    'female',         // Generic female voices
+    'uk english female', // Google UK English Female
+    'en-gb',          // UK English voices (often softer)
+  ];
+
+  // Try to find a preferred soothing voice
+  for (const name of soothingVoiceNames) {
+    const found = voices.find(voice => 
+      voice.name.toLowerCase().includes(name.toLowerCase())
+    );
+    if (found) {
+      return found;
+    }
+  }
+
+  // Fallback: Find any English female voice
+  const englishVoices = voices.filter(voice => 
+    voice.lang.startsWith('en') && 
+    !voice.name.toLowerCase().includes('male') &&
+    !voice.name.toLowerCase().includes('david') &&
+    !voice.name.toLowerCase().includes('mark') &&
+    !voice.name.toLowerCase().includes('richard') &&
+    !voice.name.toLowerCase().includes('james')
+  );
+
+  if (englishVoices.length > 0) {
+    // Prefer UK English voices (often softer/calmer)
+    const ukVoice = englishVoices.find(v => v.lang.includes('GB') || v.lang.includes('UK'));
+    return ukVoice || englishVoices[0];
+  }
+
+  // Last resort: return first English voice
+  const anyEnglish = voices.find(voice => voice.lang.startsWith('en'));
+  return anyEnglish || voices[0];
+}
+
+// Text-to-Speech with soothing voice
 function speakText(text) {
   // Stop any ongoing speech
   if (currentSpeechSynthesis) {
@@ -118,15 +169,32 @@ function speakText(text) {
 
   if (cleanText.trim()) {
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 0.9; // Slightly slower for better comprehension
-    utterance.pitch = 1;
-    utterance.volume = 1;
+    
+    // Soothing voice settings for a calm, gentle reading experience
+    utterance.rate = 0.82; // Slower pace (0.1-10, default 1) - calm and clear
+    utterance.pitch = 0.88; // Slightly lower pitch (0-2, default 1) - warmer, more soothing
+    utterance.volume = 0.88; // Gentle volume (0-1, default 1) - not too loud
     utterance.lang = "en-US";
+
+    // Select the most soothing voice available
+    const soothingVoice = getSoothingVoice();
+    if (soothingVoice) {
+      utterance.voice = soothingVoice;
+      // If it's a UK voice, set the language accordingly
+      if (soothingVoice.lang.includes('GB') || soothingVoice.lang.includes('UK')) {
+        utterance.lang = "en-GB";
+      }
+    }
 
     currentSpeechSynthesis = utterance;
     window.speechSynthesis.speak(utterance);
 
     utterance.onend = () => {
+      currentSpeechSynthesis = null;
+    };
+
+    utterance.onerror = (event) => {
+      console.error("Speech synthesis error:", event);
       currentSpeechSynthesis = null;
     };
   }
@@ -140,55 +208,7 @@ function stopSpeech() {
   }
 }
 
-// Simplify Text (client-side formatting)
-function simplifyText(text) {
-  // This is a simple client-side formatter
-  // For more advanced simplification, you'd call the API
-  const tempDiv = document.createElement("div");
-  tempDiv.innerHTML = text;
-  
-  // Break long paragraphs into shorter ones
-  const paragraphs = tempDiv.querySelectorAll("p");
-  paragraphs.forEach((p) => {
-    const sentences = p.textContent.split(/[.!?]+/).filter((s) => s.trim());
-    if (sentences.length > 2) {
-      p.innerHTML = sentences
-        .slice(0, 2)
-        .map((s) => s.trim() + ".")
-        .join("<br><br>");
-    }
-  });
-  
-  return tempDiv.innerHTML;
-}
-
-// Highlight Key Points
-function highlightKeyPoints(text) {
-  const tempDiv = document.createElement("div");
-  tempDiv.innerHTML = text;
-  
-  // Find sentences that start with capital letters and are short (likely key points)
-  const paragraphs = tempDiv.querySelectorAll("p");
-  paragraphs.forEach((p) => {
-    const sentences = p.innerHTML.split(/(?<=[.!?])\s+/);
-    p.innerHTML = sentences
-      .map((sentence) => {
-        const trimmed = sentence.trim();
-        // If sentence is short and starts with a capital, make it bold
-        if (
-          trimmed.length < 80 &&
-          trimmed.match(/^[A-Z]/) &&
-          !trimmed.startsWith("<")
-        ) {
-          return `<strong>${trimmed}</strong>`;
-        }
-        return trimmed;
-      })
-      .join(" ");
-  });
-  
-  return tempDiv.innerHTML;
-}
+// Removed simplify and highlight functions as buttons are no longer needed
 
 // Generate unique ID
 function generateUniqueId() {
@@ -224,27 +244,15 @@ function addMessageActions(messageId) {
   );
   if (actionsContainer && !actionsContainer.querySelector(".message-action-btn")) {
     actionsContainer.innerHTML = `
-      <button class="message-action-btn speak-btn" data-action="speak" title="Read aloud">
+      <button class="message-action-btn speak-btn" data-action="speak" title="Read aloud with soothing voice">
         🔊 Read
-      </button>
-      <button class="message-action-btn simplify-btn" data-action="simplify" title="Simplify text">
-        ✂️ Simplify
-      </button>
-      <button class="message-action-btn highlight-btn" data-action="highlight" title="Highlight key points">
-        ⭐ Highlight
       </button>
     `;
 
-    // Add event listeners
+    // Add event listener
     actionsContainer
       .querySelector(".speak-btn")
       .addEventListener("click", () => speakMessage(messageId));
-    actionsContainer
-      .querySelector(".simplify-btn")
-      .addEventListener("click", () => simplifyMessage(messageId));
-    actionsContainer
-      .querySelector(".highlight-btn")
-      .addEventListener("click", () => highlightMessage(messageId));
   }
 }
 
@@ -253,22 +261,6 @@ function speakMessage(messageId) {
   const messageDiv = document.getElementById(messageId);
   if (messageDiv) {
     speakText(messageDiv.innerHTML);
-  }
-}
-
-function simplifyMessage(messageId) {
-  const messageDiv = document.getElementById(messageId);
-  if (messageDiv) {
-    const simplified = simplifyText(messageDiv.innerHTML);
-    messageDiv.innerHTML = simplified;
-  }
-}
-
-function highlightMessage(messageId) {
-  const messageDiv = document.getElementById(messageId);
-  if (messageDiv) {
-    const highlighted = highlightKeyPoints(messageDiv.innerHTML);
-    messageDiv.innerHTML = highlighted;
   }
 }
 
@@ -377,6 +369,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize speech recognition
   initSpeechRecognition();
+
+  // Ensure voices are loaded for text-to-speech
+  // Voices may load asynchronously, so we trigger loading early
+  if (window.speechSynthesis) {
+    // Trigger voice loading (some browsers need this)
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length === 0) {
+        // Voices not loaded yet, wait a bit and try again
+        setTimeout(loadVoices, 100);
+      }
+    };
+    
+    // Try loading voices immediately
+    loadVoices();
+    
+    // Also listen for when voices become available
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }
 
   // Theme buttons
   document.querySelectorAll(".theme-btn").forEach((btn) => {
