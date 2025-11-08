@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 return;
             }
             
-            window.location.href = "https://infogeniusai.vercel.app";
+            window.location.href = "https://ai-dyslexia.vercel.app/";
         };
         
         nameInput.addEventListener("keyup", (event) => {

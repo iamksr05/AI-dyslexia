@@ -368,16 +368,6 @@ body::before {
     box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
 }
 
-.message-action-btn.simplify-btn {
-    background: rgba(162, 89, 255, 0.2);
-    border-color: var(--electric-purple);
-}
-
-.message-action-btn.simplify-btn:hover {
-    background: rgba(162, 89, 255, 0.3);
-    box-shadow: 0 0 15px rgba(162, 89, 255, 0.5);
-}
-
 /* Enhanced formatting for dyslexia-friendly communication */
 .message ul,
 .message ol {

@@ -237,35 +237,6 @@ function chatStripe(isAi, value, uniqueId) {
   `;
 }
 
-// Simplify Text function (for simplify button)
-function simplifyText(text) {
-  const tempDiv = document.createElement("div");
-  tempDiv.innerHTML = text;
-  
-  // Break long paragraphs into shorter ones
-  const paragraphs = tempDiv.querySelectorAll("p");
-  paragraphs.forEach((p) => {
-    const sentences = p.textContent.split(/[.!?]+/).filter((s) => s.trim());
-    if (sentences.length > 2) {
-      p.innerHTML = sentences
-        .slice(0, 2)
-        .map((s) => s.trim() + ".")
-        .join("<br><br>");
-    }
-  });
-  
-  return tempDiv.innerHTML;
-}
-
-// Simplify Message function
-function simplifyMessage(messageId) {
-  const messageDiv = document.getElementById(messageId);
-  if (messageDiv) {
-    const simplified = simplifyText(messageDiv.innerHTML);
-    messageDiv.innerHTML = simplified;
-  }
-}
-
 // Add action buttons to AI messages after they're inserted
 function addMessageActions(messageId) {
   const actionsContainer = document.querySelector(
@@ -276,18 +247,12 @@ function addMessageActions(messageId) {
       <button class="message-action-btn speak-btn" data-action="speak" title="Read aloud with soothing voice">
         🎧 Read Aloud
       </button>
-      <button class="message-action-btn simplify-btn" data-action="simplify" title="Simplify text">
-        ✏️ Simplify
-      </button>
     `;
 
-    // Add event listeners
+    // Add event listener
     actionsContainer
       .querySelector(".speak-btn")
       .addEventListener("click", () => speakMessage(messageId));
-    actionsContainer
-      .querySelector(".simplify-btn")
-      .addEventListener("click", () => simplifyMessage(messageId));
   }
 }
 
