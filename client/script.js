@@ -2,146 +2,318 @@ console.log("🔥 Script loaded");
 import bot from "./assets/bot.svg";
 import user from "./assets/user.svg";
 
-const form = document.querySelector("form");
+const form = document.querySelector("#chat-form");
 const chatContainer = document.querySelector("#chat_container");
+const voiceButton = document.getElementById("voiceButton");
 
 let loadInterval;
-let lastRequestTime = 0; // Track the time of the last request
+let lastRequestTime = 0;
+let recognition = null;
+let isRecording = false;
+let currentSpeechSynthesis = null;
 
-// Function to create the typing loader animation
-function loader(element) {
-  element.textContent = "";
-
-  loadInterval = setInterval(() => {
-    // Update the text content of the loading indicator
-    element.textContent += ".";
-
-    // If the loading indicator has reached three dots, reset it
-    if (element.textContent === "....") {
-      element.textContent = "";
-    }
-  }, 300);
+// Initialize theme and font size from localStorage
+function initSettings() {
+  const savedTheme = localStorage.getItem("theme") || "cream";
+  const savedFontSize = localStorage.getItem("fontSize") || "medium";
+  setTheme(savedTheme);
+  setFontSize(savedFontSize);
 }
 
-// Function to simulate typing animation for bot responses
-function typeText(element, text) {
-  element.innerHTML = ""; // Clear the content before typing
-
-  // Create a temporary element to parse HTML content
-  const tempElement = document.createElement("div");
-  tempElement.innerHTML = text;
-
-  // Iterate through child nodes and append them to the message element with typing animation
-  for (let i = 0; i < tempElement.childNodes.length; i++) {
-    const node = tempElement.childNodes[i];
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      // If it's an element node, append a clone of it with typing animation
-      const clonedNode = node.cloneNode(true);
-      clonedNode.style.display = "none";
-      element.appendChild(clonedNode);
-
-      // Apply typing animation effect
-      setTimeout(() => {
-        clonedNode.style.display = "inline";
-      }, i * 20); // Adjust the typing speed (20 milliseconds per character)
-    } else if (node.nodeType === Node.TEXT_NODE) {
-      // If it's a text node, create a span element for each character to preserve spaces and apply typing animation
-      for (let j = 0; j < node.nodeValue.length; j++) {
-        const span = document.createElement("span");
-        span.textContent = node.nodeValue[j];
-        span.style.display = "none";
-        element.appendChild(span);
-
-        // Apply typing animation effect
-        setTimeout(() => {
-          span.style.display = "inline";
-        }, (i * node.nodeValue.length + j) * 20); // Adjust the typing speed (20 milliseconds per character)
-      }
+// Theme Management
+function setTheme(theme) {
+  document.body.className = `theme-${theme}`;
+  document.querySelectorAll(".theme-btn").forEach((btn) => {
+    btn.classList.remove("active");
+    if (btn.dataset.theme === theme) {
+      btn.classList.add("active");
     }
+  });
+  localStorage.setItem("theme", theme);
+}
+
+// Font Size Management
+function setFontSize(size) {
+  // Update body class for global font size (CSS handles the rest)
+  document.body.classList.remove("font-small", "font-medium", "font-large");
+  document.body.classList.add(`font-${size}`);
+  
+  document.querySelectorAll(".font-size-btn").forEach((btn) => {
+    btn.classList.remove("active");
+    if (btn.dataset.size === size) {
+      btn.classList.add("active");
+    }
+  });
+  localStorage.setItem("fontSize", size);
+}
+
+// Initialize Speech Recognition
+function initSpeechRecognition() {
+  if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById("prompt").value = transcript;
+      isRecording = false;
+      voiceButton.classList.remove("recording");
+      voiceButton.innerHTML = "🗣️";
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      isRecording = false;
+      voiceButton.classList.remove("recording");
+      voiceButton.innerHTML = "🗣️";
+      alert("Speech recognition error. Please try again.");
+    };
+
+    recognition.onend = () => {
+      isRecording = false;
+      voiceButton.classList.remove("recording");
+      voiceButton.innerHTML = "🗣️";
+    };
+  } else {
+    voiceButton.style.display = "none";
+    console.log("Speech recognition not supported");
   }
 }
 
-// Generate unique ID for each message
+// Voice Input Handler
+function toggleVoiceInput() {
+  if (!recognition) {
+    alert("Voice input is not supported in your browser.");
+    return;
+  }
+
+  if (isRecording) {
+    recognition.stop();
+    isRecording = false;
+    voiceButton.classList.remove("recording");
+    voiceButton.innerHTML = "🗣️";
+  } else {
+    recognition.start();
+    isRecording = true;
+    voiceButton.classList.add("recording");
+    voiceButton.innerHTML = "🔴";
+  }
+}
+
+// Text-to-Speech
+function speakText(text) {
+  // Stop any ongoing speech
+  if (currentSpeechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+
+  // Remove HTML tags and get clean text
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = text;
+  const cleanText = tempDiv.textContent || tempDiv.innerText || "";
+
+  if (cleanText.trim()) {
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.9; // Slightly slower for better comprehension
+    utterance.pitch = 1;
+    utterance.volume = 1;
+    utterance.lang = "en-US";
+
+    currentSpeechSynthesis = utterance;
+    window.speechSynthesis.speak(utterance);
+
+    utterance.onend = () => {
+      currentSpeechSynthesis = null;
+    };
+  }
+}
+
+// Stop Text-to-Speech
+function stopSpeech() {
+  if (currentSpeechSynthesis) {
+    window.speechSynthesis.cancel();
+    currentSpeechSynthesis = null;
+  }
+}
+
+// Simplify Text (client-side formatting)
+function simplifyText(text) {
+  // This is a simple client-side formatter
+  // For more advanced simplification, you'd call the API
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = text;
+  
+  // Break long paragraphs into shorter ones
+  const paragraphs = tempDiv.querySelectorAll("p");
+  paragraphs.forEach((p) => {
+    const sentences = p.textContent.split(/[.!?]+/).filter((s) => s.trim());
+    if (sentences.length > 2) {
+      p.innerHTML = sentences
+        .slice(0, 2)
+        .map((s) => s.trim() + ".")
+        .join("<br><br>");
+    }
+  });
+  
+  return tempDiv.innerHTML;
+}
+
+// Highlight Key Points
+function highlightKeyPoints(text) {
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = text;
+  
+  // Find sentences that start with capital letters and are short (likely key points)
+  const paragraphs = tempDiv.querySelectorAll("p");
+  paragraphs.forEach((p) => {
+    const sentences = p.innerHTML.split(/(?<=[.!?])\s+/);
+    p.innerHTML = sentences
+      .map((sentence) => {
+        const trimmed = sentence.trim();
+        // If sentence is short and starts with a capital, make it bold
+        if (
+          trimmed.length < 80 &&
+          trimmed.match(/^[A-Z]/) &&
+          !trimmed.startsWith("<")
+        ) {
+          return `<strong>${trimmed}</strong>`;
+        }
+        return trimmed;
+      })
+      .join(" ");
+  });
+  
+  return tempDiv.innerHTML;
+}
+
+// Generate unique ID
 function generateUniqueId() {
   const timestamp = Date.now();
   const randomNumber = Math.random();
   const hexadecimalString = randomNumber.toString(16);
-
   return `id-${timestamp}-${hexadecimalString}`;
 }
 
-// Function to create the chat stripe (bubble) for each message
+// Create chat stripe with action buttons
 function chatStripe(isAi, value, uniqueId) {
   return `
     <div class="wrapper ${isAi ? "ai" : "user"}">
-        <div class="chat">
-            <div class="profile">
-                <img src="${isAi ? bot : user}" alt="${
-    isAi ? "bot" : "user"
-  }" />
-            </div>
+      <div class="chat">
+        <div class="message-container">
+          <div class="profile">
+            <img src="${isAi ? bot : user}" alt="${isAi ? "bot" : "user"}" />
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
             <div class="message" id="${uniqueId}">${value}</div>
+            ${isAi ? `<div class="message-actions" data-message-id="${uniqueId}"></div>` : ""}
+          </div>
         </div>
+      </div>
     </div>
-    `;
+  `;
 }
 
-// Handle form submission and chat functionality
+// Add action buttons to AI messages after they're inserted
+function addMessageActions(messageId) {
+  const actionsContainer = document.querySelector(
+    `[data-message-id="${messageId}"]`
+  );
+  if (actionsContainer && !actionsContainer.querySelector(".message-action-btn")) {
+    actionsContainer.innerHTML = `
+      <button class="message-action-btn speak-btn" data-action="speak" title="Read aloud">
+        🔊 Read
+      </button>
+      <button class="message-action-btn simplify-btn" data-action="simplify" title="Simplify text">
+        ✂️ Simplify
+      </button>
+      <button class="message-action-btn highlight-btn" data-action="highlight" title="Highlight key points">
+        ⭐ Highlight
+      </button>
+    `;
+
+    // Add event listeners
+    actionsContainer
+      .querySelector(".speak-btn")
+      .addEventListener("click", () => speakMessage(messageId));
+    actionsContainer
+      .querySelector(".simplify-btn")
+      .addEventListener("click", () => simplifyMessage(messageId));
+    actionsContainer
+      .querySelector(".highlight-btn")
+      .addEventListener("click", () => highlightMessage(messageId));
+  }
+}
+
+// Message action functions
+function speakMessage(messageId) {
+  const messageDiv = document.getElementById(messageId);
+  if (messageDiv) {
+    speakText(messageDiv.innerHTML);
+  }
+}
+
+function simplifyMessage(messageId) {
+  const messageDiv = document.getElementById(messageId);
+  if (messageDiv) {
+    const simplified = simplifyText(messageDiv.innerHTML);
+    messageDiv.innerHTML = simplified;
+  }
+}
+
+function highlightMessage(messageId) {
+  const messageDiv = document.getElementById(messageId);
+  if (messageDiv) {
+    const highlighted = highlightKeyPoints(messageDiv.innerHTML);
+    messageDiv.innerHTML = highlighted;
+  }
+}
+
+// Loader function (simplified, no animation for dyslexia-friendly)
+function loader(element) {
+  element.textContent = "Thinking...";
+}
+
+// Handle form submission
 const handleSubmit = async (e) => {
   e.preventDefault();
+  stopSpeech(); // Stop any ongoing speech
 
-  const data = new FormData(form);
-  const prompt = data.get("prompt").trim(); // Trim any leading or trailing whitespace
+  const promptInput = document.getElementById("prompt");
+  const prompt = promptInput.value.trim();
 
-  // Check if the message is empty, if so, do not submit
   if (!prompt) {
     alert("Please enter a message.");
     return;
   }
 
   const currentTime = Date.now();
-
-  // Check if enough time has passed since the last request (2 seconds in this case)
   if (currentTime - lastRequestTime < 2000) {
     alert("Please wait a moment before sending another request.");
     return;
   }
 
-  // Update the last request time
   lastRequestTime = currentTime;
 
-  // User's chat stripe
-  chatContainer.innerHTML += chatStripe(false, prompt);
+  // User's message
+  chatContainer.innerHTML += chatStripe(false, prompt, generateUniqueId());
 
-  // Clear the textarea input
-  form.reset();
+  // Clear input
+  promptInput.value = "";
+  promptInput.style.height = "auto";
 
-  // Animate the send icon
-  sendIcon.classList.add("animate-send");
-
-  // Animate the send icon
-  sendIcon.classList.add("animate-send");
-
-  // Remove the animation class after it ends so it can trigger again next time
-  sendIcon.addEventListener(
-    "animationend",
-    () => {
-      sendIcon.classList.remove("animate-send");
-    },
-    { once: true }
-  );
-
-  // Bot's chat stripe
-  const uniqueId = generateUniqueId();
-  chatContainer.innerHTML += chatStripe(true, " ", uniqueId);
-
-  // Scroll to the bottom
+  // Scroll to bottom
   chatContainer.scrollTop = chatContainer.scrollHeight;
 
-  // Specific message div for the bot response
-  const messageDiv = document.getElementById(uniqueId);
+  // Bot's message
+  const uniqueId = generateUniqueId();
+  chatContainer.innerHTML += chatStripe(true, " ", uniqueId);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 
-  // Show loading indicator while waiting for response.
+  const messageDiv = document.getElementById(uniqueId);
   loader(messageDiv);
 
   // Backend server URLs
@@ -149,7 +321,6 @@ const handleSubmit = async (e) => {
   const dev = "http://localhost:5000";
 
   try {
-    // Send the user's message to the backend for processing
     const response = await fetch(live, {
       method: "POST",
       headers: {
@@ -160,59 +331,109 @@ const handleSubmit = async (e) => {
       }),
     });
 
-    // Clear the loading indicator
     clearInterval(loadInterval);
     messageDiv.innerHTML = "";
 
     if (response.ok) {
-      // Parse the bot's response
       const responseData = await response.json();
-      const parsedData = responseData.bot.trim(); // Trim any trailing spaces/'\n'
+      const parsedData = responseData.bot.trim();
 
-      // Display the bot's response with typing animation
-      typeText(messageDiv, parsedData);
+      // Display response immediately (no typing animation for dyslexia-friendly)
+      messageDiv.innerHTML = parsedData;
+      
+      // Font size is handled by CSS classes on body element
+      // Add action buttons
+      addMessageActions(uniqueId);
+      
+      // Scroll to bottom
+      chatContainer.scrollTop = chatContainer.scrollHeight;
     } else {
       const errorText = await response.text();
-
-      // If there's an error, display a message
       if (errorText.includes("quota")) {
         messageDiv.innerHTML =
-          "Sorry for the inconvenience! The AI is temporarily unavailable. We are working to get things back up and running. Please try again shortly!";
+          "Sorry. The AI is temporarily unavailable. We are working to fix this. Please try again soon.";
       } else {
-        messageDiv.innerHTML =
-          "Apologies, the website has been disabled by Karan Ram.";
+        messageDiv.innerHTML = "Sorry. There was an error. Please try again.";
       }
     }
   } catch (error) {
-    // Handle errors such as network issues
     clearInterval(loadInterval);
-    messageDiv.innerHTML = "Disconnected to Database";
+    messageDiv.innerHTML = "Connection error. Please check your internet.";
     console.error(error);
   }
 };
 
-// Event listeners to handle form submission and input behavior
+// Auto-resize textarea
+function autoResizeTextarea() {
+  const textarea = document.getElementById("prompt");
+  textarea.style.height = "auto";
+  textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
+}
+
+// Initialize on DOM load
 document.addEventListener("DOMContentLoaded", function () {
-  const promptInput = document.getElementById("prompt");
-  const sendIcon = document.getElementById("sendIcon");
+  // Initialize settings
+  initSettings();
 
-  // Add initial AI greeting message (dyslexia-friendly)
-  const initialMessage = "Hello! 👋<br><br>I am your AI helper.<br><br>I write in a way that is easy to read.<br><br>What would you like to know?";
-  chatContainer.innerHTML = chatStripe(true, initialMessage, generateUniqueId());
+  // Initialize speech recognition
+  initSpeechRecognition();
 
-  document.getElementById("prompt").focus();
+  // Theme buttons
+  document.querySelectorAll(".theme-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setTheme(btn.dataset.theme);
+    });
+  });
 
+  // Font size buttons
+  document.querySelectorAll(".font-size-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setFontSize(btn.dataset.size);
+      // CSS classes handle the font size updates automatically
+    });
+  });
+
+  // Voice button
+  if (voiceButton) {
+    voiceButton.addEventListener("click", toggleVoiceInput);
+  }
+
+  // Form submission
   form.addEventListener("submit", handleSubmit);
-  form.addEventListener("keydown", (e) => {
+
+  // Enter key handling
+  const promptInput = document.getElementById("prompt");
+  promptInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
     }
   });
+
+  // Auto-resize textarea
+  promptInput.addEventListener("input", autoResizeTextarea);
+
+  // Initial greeting
+  const initialMessageId = generateUniqueId();
+  const initialMessage =
+    "Hello! 👋<br><br>I am your AI helper.<br><br>I write in a way that is easy to read.<br><br>What would you like to know?";
+  chatContainer.innerHTML = chatStripe(
+    true,
+    initialMessage,
+    initialMessageId
+  );
+  
+  // Add action buttons to initial message
+  setTimeout(() => {
+    addMessageActions(initialMessageId);
+  }, 100);
+
+  promptInput.focus();
 });
 
-
+// Service Worker
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js")
+  navigator.serviceWorker
+    .register("/service-worker.js")
     .then(() => console.log("Service Worker Registered"));
 }

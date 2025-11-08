@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>AI Learning Companion</title>
+    <title>AI Learning Companion - Dyslexia Friendly</title>
 
     <!-- Meta -->
     <meta
@@ -11,11 +11,11 @@
     />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#f5f5dc" />
 
     <!-- Favicon & Manifest -->
     <link rel="manifest" href="/client/manifest.json" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#f5f5dc" />
 
     <!-- OpenDyslexic Font loaded via @font-face in CSS, with Arial and Verdana as fallbacks -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
@@ -34,27 +34,60 @@
           </div>
         </div>
         <div class="header-right">
-          <div class="status-indicator">
-            <span class="status-dot"></span>
-            <span class="status-text">AI Connected</span>
+          <div class="controls-bar">
+            <!-- Theme Toggle -->
+            <div class="theme-selector" title="Choose theme">
+              <button class="theme-btn cream active" data-theme="cream" title="Cream theme" aria-label="Cream theme"></button>
+              <button class="theme-btn light" data-theme="light" title="Light theme" aria-label="Light theme"></button>
+              <button class="theme-btn dark" data-theme="dark" title="Dark theme" aria-label="Dark theme"></button>
+            </div>
+            
+            <!-- Font Size Controls -->
+            <div class="font-size-controls" title="Font size">
+              <button class="font-size-btn" data-size="small" aria-label="Small font">A</button>
+              <button class="font-size-btn active" data-size="medium" aria-label="Medium font">A</button>
+              <button class="font-size-btn" data-size="large" aria-label="Large font">A</button>
+            </div>
+            
+            <!-- Status -->
+            <div class="status-indicator">
+              <span class="status-dot"></span>
+              <span class="status-text">AI Connected</span>
+            </div>
           </div>
         </div>
       </header>
 
       <div id="chat_container"></div>
 
-      <form>
-        <textarea
-          id="prompt"
-          name="prompt"
-          rows="1"
-          cols="1"
-          placeholder="Ask me anything...🎯"
-        ></textarea>
-        <button type="submit" id="sendButton">
-          <!-- STATIC IMAGE, does NOT change -->
-          <img id="sendIcon" src="./assets/send.svg" alt="send" />
-        </button>
+      <form id="chat-form">
+        <div class="input-row">
+          <textarea
+            id="prompt"
+            name="prompt"
+            rows="1"
+            placeholder="Type your message here... 📝"
+            aria-label="Message input"
+          ></textarea>
+          <button 
+            type="button" 
+            id="voiceButton" 
+            class="voice-button" 
+            title="Voice input (Speech to Text)"
+            aria-label="Voice input"
+          >
+            🗣️
+          </button>
+          <button 
+            type="submit" 
+            id="sendButton" 
+            class="send-button"
+            title="Send message"
+            aria-label="Send message"
+          >
+            <img id="sendIcon" src="./assets/send.svg" alt="send" />
+          </button>
+        </div>
       </form>
     </div>
 
@@ -77,7 +110,7 @@
       }
     </script>
 
-    <!-- JavaScript file (no changes needed) -->
+    <!-- JavaScript file -->
     <script type="module" src="script.js"></script>
   </body>
 </html>
