@@ -12,39 +12,9 @@ let recognition = null;
 let isRecording = false;
 let currentSpeechSynthesis = null;
 
-// Initialize theme and font size from localStorage
+// Initialize settings (simplified for new design)
 function initSettings() {
-  const savedTheme = localStorage.getItem("theme") || "cream";
-  const savedFontSize = localStorage.getItem("fontSize") || "medium";
-  setTheme(savedTheme);
-  setFontSize(savedFontSize);
-}
-
-// Theme Management
-function setTheme(theme) {
-  document.body.className = `theme-${theme}`;
-  document.querySelectorAll(".theme-btn").forEach((btn) => {
-    btn.classList.remove("active");
-    if (btn.dataset.theme === theme) {
-      btn.classList.add("active");
-    }
-  });
-  localStorage.setItem("theme", theme);
-}
-
-// Font Size Management
-function setFontSize(size) {
-  // Update body class for global font size (CSS handles the rest)
-  document.body.classList.remove("font-small", "font-medium", "font-large");
-  document.body.classList.add(`font-${size}`);
-  
-  document.querySelectorAll(".font-size-btn").forEach((btn) => {
-    btn.classList.remove("active");
-    if (btn.dataset.size === size) {
-      btn.classList.add("active");
-    }
-  });
-  localStorage.setItem("fontSize", size);
+  // Settings are handled by CSS now - no theme/font size toggles needed
 }
 
 // Initialize Speech Recognition
@@ -62,21 +32,21 @@ function initSpeechRecognition() {
       document.getElementById("prompt").value = transcript;
       isRecording = false;
       voiceButton.classList.remove("recording");
-      voiceButton.innerHTML = "🗣️";
+      voiceButton.innerHTML = "🎤";
     };
 
     recognition.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
       isRecording = false;
       voiceButton.classList.remove("recording");
-      voiceButton.innerHTML = "🗣️";
+      voiceButton.innerHTML = "🎤";
       alert("Speech recognition error. Please try again.");
     };
 
     recognition.onend = () => {
       isRecording = false;
       voiceButton.classList.remove("recording");
-      voiceButton.innerHTML = "🗣️";
+      voiceButton.innerHTML = "🎤";
     };
   } else {
     voiceButton.style.display = "none";
@@ -95,7 +65,7 @@ function toggleVoiceInput() {
     recognition.stop();
     isRecording = false;
     voiceButton.classList.remove("recording");
-    voiceButton.innerHTML = "🗣️";
+    voiceButton.innerHTML = "🎤";
   } else {
     recognition.start();
     isRecording = true;
@@ -245,14 +215,48 @@ function addMessageActions(messageId) {
   if (actionsContainer && !actionsContainer.querySelector(".message-action-btn")) {
     actionsContainer.innerHTML = `
       <button class="message-action-btn speak-btn" data-action="speak" title="Read aloud with soothing voice">
-        🔊 Read
+        🎧 Read Aloud
+      </button>
+      <button class="message-action-btn simplify-btn" data-action="simplify" title="Simplify text">
+        ✏️ Simplify
       </button>
     `;
 
-    // Add event listener
+    // Add event listeners
     actionsContainer
       .querySelector(".speak-btn")
       .addEventListener("click", () => speakMessage(messageId));
+    actionsContainer
+      .querySelector(".simplify-btn")
+      .addEventListener("click", () => simplifyMessage(messageId));
+  }
+}
+
+// Simplify Text function
+function simplifyText(text) {
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = text;
+  
+  // Break long paragraphs into shorter ones
+  const paragraphs = tempDiv.querySelectorAll("p");
+  paragraphs.forEach((p) => {
+    const sentences = p.textContent.split(/[.!?]+/).filter((s) => s.trim());
+    if (sentences.length > 2) {
+      p.innerHTML = sentences
+        .slice(0, 2)
+        .map((s) => s.trim() + ".")
+        .join("<br><br>");
+    }
+  });
+  
+  return tempDiv.innerHTML;
+}
+
+function simplifyMessage(messageId) {
+  const messageDiv = document.getElementById(messageId);
+  if (messageDiv) {
+    const simplified = simplifyText(messageDiv.innerHTML);
+    messageDiv.innerHTML = simplified;
   }
 }
 
@@ -391,21 +395,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Theme buttons
-  document.querySelectorAll(".theme-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      setTheme(btn.dataset.theme);
-    });
-  });
-
-  // Font size buttons
-  document.querySelectorAll(".font-size-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      setFontSize(btn.dataset.size);
-      // CSS classes handle the font size updates automatically
-    });
-  });
-
   // Voice button
   if (voiceButton) {
     voiceButton.addEventListener("click", toggleVoiceInput);
@@ -429,7 +418,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initial greeting
   const initialMessageId = generateUniqueId();
   const initialMessage =
-    "Hello! 👋<br><br>I am your AI helper.<br><br>I write in a way that is easy to read.<br><br>What would you like to know?";
+    "Hello! 👋<br><br>I am <strong>LearnEase AI</strong>.<br><br>I write in a way that is <strong>easy to read</strong>.<br><br>What would you like to know?";
   chatContainer.innerHTML = chatStripe(
     true,
     initialMessage,
