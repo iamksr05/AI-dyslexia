@@ -344,7 +344,7 @@ const handleSubmit = async (e) => {
   loader(messageDiv);
 
   // Backend server URLs
-  const live = "https://updatedai-x4al.onrender.com";
+  const live = "https://ai-dyslexia.onrender.com";
   const dev = "http://localhost:5000";
 
   try {
