@@ -313,7 +313,7 @@ const handleSubmit = async (e) => {
   const dev = "http://localhost:5000";
 
   try {
-    const response = await fetch(live, {
+    const response = await fetch(dev, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
